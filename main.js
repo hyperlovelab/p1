@@ -12,6 +12,11 @@ camera.position.set(0, baseCameraY, 10);
 const canvas = document.querySelector('#three-canvas');
 const video = document.getElementById("webcam");
 
+// [핵심 수정] 웹캠 화면을 화면상에서 완전히 숨김
+if (video) {
+    video.style.display = "none";
+}
+
 const renderer = new THREE.WebGLRenderer({ 
     canvas, 
     antialias: true, 
@@ -41,11 +46,10 @@ let particleSystem;
 const particleCount = 150; 
 const glowColor = new THREE.Color(0xF09A69); 
 
-// --- 조명 세팅 수정 (동적 조명 추가) ---
+// --- 조명 세팅 ---
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
 scene.add(ambientLight);
 
-// [핵심] 사용자의 위치를 추적할 포인트 조명
 const movingLight = new THREE.PointLight(0xffffff, 2.0, 50);
 movingLight.position.set(0, 0, 10);
 scene.add(movingLight);
@@ -131,7 +135,6 @@ const gltfLoader = new GLTFLoader();
 function setupModelMaterial(model, useGlow = true) {
     model.traverse((child) => {
         if (child.isMesh && child.material) {
-            // 조명 반응을 위해 질감 조정
             child.material.metalness = 0.2; 
             child.material.roughness = 0.5;
             if (useGlow) {
@@ -171,7 +174,10 @@ async function setupFaceLandmarker() {
 
 function startCamera() {
     navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 } })
-        .then((stream) => { video.srcObject = stream; video.addEventListener("loadeddata", predictWebcam); });
+        .then((stream) => { 
+            video.srcObject = stream; 
+            video.addEventListener("loadeddata", predictWebcam); 
+        });
 }
 
 async function predictWebcam() {
@@ -201,19 +207,15 @@ function animate() {
     const modelGlowSpeed = isBlinking ? 0.2 : 0.03; 
     currentGlow += (targetGlow - currentGlow) * modelGlowSpeed;
 
-    // 1. 카메라 이동 및 시선 처리
     const targetCamX = mouseX * 0.6; 
     const targetCamY = (baseCameraY + mouseY) * 0.6;
     camera.position.x += (targetCamX - camera.position.x) * 0.08;
     camera.position.y += (targetCamY - camera.position.y) * 0.08;
     camera.lookAt(mouseX * -0.3, mouseY * -0.2, 0);
 
-    // [추가] 3단계: 조명 위치 동기화
-    // 얼굴 위치에 따라 광원을 이동시켜 하이라이트를 변화시킴
     movingLight.position.x = mouseX * 1.2;
     movingLight.position.y = mouseY * 1.2;
 
-    // 3. 격자 및 모델 업데이트
     if (gridBox) {
         gridBox.position.x = mouseX * 0.3;
         gridBox.position.y = mouseY * 0.15;
@@ -228,6 +230,10 @@ function animate() {
     }
 
     if (particleSystem) {
+        // 파티클 기본 점멸 효과 유지
+        particleSystem.material.size = 0.2 + (currentGlow * 1.2); 
+        particleSystem.material.opacity = 0.6 + currentGlow;
+
         const positions = particleSystem.geometry.attributes.position.array;
         const data = particleSystem.userData;
         for (let i = 0; i < particleCount; i++) {

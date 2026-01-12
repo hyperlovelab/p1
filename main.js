@@ -12,7 +12,7 @@ camera.position.set(0, baseCameraY, 10);
 const canvas = document.querySelector('#three-canvas');
 const video = document.getElementById("webcam");
 
-// [핵심 수정] 웹캠 화면을 화면상에서 완전히 숨김
+// --- 웹캠 화면 화면상에서 제거 --- //
 if (video) {
     video.style.display = "none";
 }
@@ -26,7 +26,7 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 
-// --- 애니메이션 및 효과 변수 ---
+// --- 애니메이션 및 효과 변수 --- //
 let isBlinking = false;
 let mouseX = 0, mouseY = 0;
 let faceLandmarker;
@@ -46,7 +46,7 @@ let particleSystem;
 const particleCount = 150; 
 const glowColor = new THREE.Color(0xF09A69); 
 
-// --- 조명 세팅 ---
+// --- 조명 --- //
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
 scene.add(ambientLight);
 
@@ -88,6 +88,8 @@ function createGridBox(width, height, depth) {
     const rightWall = createGridPlane(depth, height); rightWall.rotation.y = -Math.PI / 2; rightWall.position.x = width / 2; group.add(rightWall);
     return group;
 }
+
+// --- 배경 전환 --- //
 gridBox = createGridBox(30, 15, 30);
 scene.add(gridBox);
 
@@ -105,6 +107,7 @@ function createCircleTexture() {
     return new THREE.CanvasTexture(canvas);
 }
 
+// --- 파티클 회전 및 설정 --- //
 function createMagicParticles() {
     const geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(particleCount * 3);
@@ -145,6 +148,7 @@ function setupModelMaterial(model, useGlow = true) {
     });
 }
 
+// --- 모델 설정 --- //
 function loadModels() {
     gltfLoader.load('./assets/dream2.glb', (gltf) => {
         riceModel = gltf.scene;
@@ -230,7 +234,7 @@ function animate() {
     }
 
     if (particleSystem) {
-        // 파티클 기본 점멸 효과 유지
+        // 파티클 점멸 효과
         particleSystem.material.size = 0.2 + (currentGlow * 1.2); 
         particleSystem.material.opacity = 0.6 + currentGlow;
 
@@ -258,4 +262,5 @@ window.addEventListener('resize', () => {
 setupFaceLandmarker();
 loadModels(); 
 createMagicParticles();
+
 animate();
